@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CyberSafe — Playful Cybersecurity Quiz</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--good:#10b981;--bad:#ef4444}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;background:linear-gradient(180deg,#071025 0%, var(--bg) 100%);color:#e6eef6;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+    .wrap{width:980px;max-width:100%;display:grid;grid-template-columns:1fr 360px;gap:20px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);padding:22px;border-radius:14px;box-shadow:0 6px 30px rgba(2,6,23,0.6)}
+    header h1{margin:0;font-size:22px;letter-spacing:-0.2px}
+    header p{margin:6px 0 16px;color:var(--muted)}
+    .question-area{min-height:200px;display:flex;flex-direction:column;justify-content:space-between}
+    .q-title{font-size:18px;margin-bottom:10px}
+    .choices{display:grid;gap:10px}
+    button.choice{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:12px 14px;text-align:left;border-radius:10px;color:inherit;cursor:pointer;font-size:15px}
+    button.choice:hover{transform:translateY(-3px)}
+    .choice.correct{border-color:rgba(16,185,129,0.2);background:linear-gradient(180deg, rgba(16,185,129,0.06), transparent)}
+    .choice.wrong{border-color:rgba(239,68,68,0.15);background:linear-gradient(180deg, rgba(239,68,68,0.04), transparent)}
+    .controls{display:flex;gap:8px;align-items:center;margin-top:16px}
+    .btn{background:var(--accent);border:none;padding:10px 12px;border-radius:10px;color:#042;cursor:pointer;font-weight:600}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .sidebar{display:flex;flex-direction:column;gap:12px}
+    .stat{display:flex;justify-content:space-between;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+    .hint{font-size:14px;color:var(--muted)}
+    .progressbar{height:10px;background:rgba(255,255,255,0.04);border-radius:999px;overflow:hidden}
+    .progress{height:100%;background:linear-gradient(90deg,var(--accent),#7c3aed);width:0%}
+    .explain{margin-top:12px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.25);color:var(--muted);font-size:14px}
+    footer{margin-top:14px;color:var(--muted);font-size:13px}
+    .small{font-size:13px;color:var(--muted)}
+    .confetti {position:fixed;left:0;right:0;top:0;bottom:0;pointer-events:none}
+    .center-msg{display:flex;align-items:center;gap:12px}
+    @media (max-width: 880px){.wrap{grid-template-columns:1fr;}.sidebar{order:2}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="card">
+      <header>
+        <div class="center-msg">
+          <h1>CyberSafe — Learn Cybersecurity (Playful Quiz)</h1>
+        </div>
+        <p>Short, fun questions that teach you real security tips. Instant feedback, hints, and explanations — no boring lectures!</p>
+      </header>
+
+      <section class="question-area" aria-live="polite">
+        <div>
+          <div class="q-meta small">Question <span id="qIndex">1</span> / <span id="qTotal">1</span></div>
+          <div class="q-title" id="question">Loading question...</div>
+        </div>
+
+        <div class="choices" id="choices"></div>
+
+        <div class="explain" id="explain" hidden></div>
+
+        <div class="controls">
+          <button class="btn" id="nextBtn">Start ▶</button>
+          <button class="btn ghost" id="hintBtn">Hint 💡</button>
+          <button class="btn ghost" id="skipBtn">Skip ⏭</button>
+          <div style="margin-left:auto" class="small">Score: <span id="score">0</span></div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="card sidebar">
+      <div class="stat">
+        <div>
+          <div class="small">Progress</div>
+          <div style="font-weight:700;font-size:18px" id="progressText">0 / 0</div>
+        </div>
+        <div style="width:150px">
+          <div class="progressbar" aria-hidden="true"><div class="progress" id="progressBar"></div></div>
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="small">Lives</div>
+        <div id="lives">❤️❤️❤️</div>
+      </div>
+
+      <div class="stat">
+        <div class="small">Streak</div>
+        <div id="streak">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="small">Hints left</div>
+        <div id="hintsLeft">3</div>
+      </div>
+
+      <div class="stat">
+        <div class="small">Session summary</div>
+        <div class="small" id="summary">Answer questions to earn tips and badges.</div>
+      </div>
+
+      <div style="margin-top:auto">
+        <button class="btn" id="restart">Restart</button>
+        <button class="btn ghost" id="saveBtn">Save progress</button>
+      </div>
+
+      <footer>
+        <div class="small">Tip: Use keyboard numbers 1–4 to answer. Your progress is stored locally.</div>
+      </footer>
+    </aside>
+  </div>
+
+  <canvas id="confettiCanvas" class="confetti"></canvas>
+
+  <script>
+    // -- Questions: each has text, choices, answer index, hint, explanation, topic
+    const QUESTIONS = [
+      {
+        q: 'You receive an unexpected email asking you to "confirm" your account by clicking a link. What should you do?',
+        choices: [
+          'Click the link and enter your details to be safe.',
+          'Ignore it or verify sender + open site directly via a browser.',
+          'Reply asking for more info.',
+          'Forward to a friend to check.'
+        ],
+        answer: 1,
+        hint: 'Think: do you usually get such emails? Where would you normally log in?',
+        explain: 'This is likely phishing. Don\'t click unknown links. Visit the official site manually or check sender details. Report the email if necessary.'
+      },
+      {
+        q: 'Which password is the strongest?',
+        choices: ['P@ssw0rd', 'Sunnyside1', 'correcthorsebatterystaple!#7', '12345678'],
+        answer: 2,
+        hint: 'Long and unique beats short and common.',
+        explain: 'Long passphrases with mixed characters and uniqueness are far stronger and easier to remember than short common passwords.'
+      },
+      {
+        q: 'What does enabling two-factor authentication (2FA) do?',
+        choices: [
+          'Makes login slower for no reason',
+          'Requires a second proof of identity (e.g., code) in addition to password',
+          'Deletes old devices automatically',
+          'Backs up your password to the cloud'
+        ],
+        answer: 1,
+        hint: 'It adds another barrier beyond the password.',
+        explain: '2FA provides an extra step (SMS, authenticator app, hardware key) so an attacker who stole your password still needs the second factor.'
+      },
+      {
+        q: 'Public Wi‑Fi (e.g., cafe) is convenient. What is a safe practice when using it?',
+        choices: [
+          'Access your bank without any protection',
+          'Use a VPN or mobile data for sensitive transactions',
+          'Turn off Wi‑Fi and use someone else\'s hotspot',
+          'Share files freely to be helpful'
+        ],
+        answer: 1,
+        hint: 'Think about who else is on that network.',
+        explain: 'Public Wi‑Fi is often unencrypted. Use a VPN, mobile data, or wait until you are on a trusted network for sensitive actions.'
+      },
+      {
+        q: 'How can you tell if a website connection is secure?',
+        choices: ['URL starts with https:// and has a lock icon', 'It loads fast', 'Lots of ads means secure', 'If site asks for password it is secure'],
+        answer: 0,
+        hint: 'Look at the address bar.',
+        explain: 'HTTPS with a valid certificate encrypts traffic. The lock icon shows the connection is encrypted, though it doesn\'t guarantee the site is trustworthy.'
+      },
+      {
+        q: 'What is social engineering?',
+        choices: [
+          'Using physical tools to break a lock',
+          'Manipulating people into revealing confidential info',
+          'A type of firewall',
+          'Encrypting email'
+        ],
+        answer: 1,
+        hint: 'It targets people, not code.',
+        explain: 'Social engineering tricks people (phone calls, emails, in-person) into giving secrets. Always verify requests, especially those asking for credentials or money.'
+      }
+    ];
+
+    // UI elements
+    const qIndexEl = document.getElementById('qIndex');
+    const qTotalEl = document.getElementById('qTotal');
+    const questionEl = document.getElementById('question');
+    const choicesEl = document.getElementById('choices');
+    const explainEl = document.getElementById('explain');
+    const nextBtn = document.getElementById('nextBtn');
+    const hintBtn = document.getElementById('hintBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    const scoreEl = document.getElementById('score');
+    const progressText = document.getElementById('progressText');
+    const progressBar = document.getElementById('progressBar');
+    const livesEl = document.getElementById('lives');
+    const streakEl = document.getElementById('streak');
+    const hintsLeftEl = document.getElementById('hintsLeft');
+    const summaryEl = document.getElementById('summary');
+    const restartBtn = document.getElementById('restart');
+    const saveBtn = document.getElementById('saveBtn');
+
+    let state = {
+      order: [],
+      current: 0,
+      score: 0,
+      correctStreak: 0,
+      lives: 3,
+      hintsLeft: 3,
+      answered: {}
+    };
+
+    const TOTAL = QUESTIONS.length;
+    qTotalEl.textContent = TOTAL;
+
+    function init() {
+      // load from localStorage if available
+      const saved = localStorage.getItem('cybersafe_state_v1');
+      if (saved) {
+        try { Object.assign(state, JSON.parse(saved)); }
+        catch(e) { console.log('load failed', e); }
+      }
+      // create a randomized order but keep if saved
+      if (!state.order || state.order.length !== TOTAL) {
+        state.order = shuffle(Array.from({length: TOTAL}, (_,i)=>i));
+        state.current = 0; state.score = 0; state.correctStreak = 0; state.lives = 3; state.hintsLeft = 3; state.answered = {};
+      }
+      renderQuestion();
+      updateSidebar();
+    }
+
+    function shuffle(arr){
+      for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}
+      return arr;
+    }
+
+    function renderQuestion() {
+      if (state.current >= TOTAL) {
+        showSummary();
+        return;
+      }
+      const qi = state.order[state.current];
+      const Q = QUESTIONS[qi];
+      qIndexEl.textContent = state.current + 1;
+      questionEl.textContent = Q.q;
+      explainEl.hidden = true; explainEl.textContent = '';
+      choicesEl.innerHTML = '';
+      Q.choices.forEach((c, i)=>{
+        const btn = document.createElement('button');
+        btn.className = 'choice';
+        btn.type = 'button';
+        btn.setAttribute('data-index', i);
+        btn.innerHTML = `<strong>${i+1}.</strong> ${c}`;
+        btn.addEventListener('click', ()=> handleAnswer(i));
+        choicesEl.appendChild(btn);
+      });
+      nextBtn.textContent = 'Submit ▶';
+      progressText.textContent = `${state.current} / ${TOTAL}`;
+      progressBar.style.width = `${(state.current / TOTAL)*100}%`;
+    }
+
+    function handleAnswer(idx) {
+      if (state.current >= TOTAL) return;
+      const qi = state.order[state.current];
+      const Q = QUESTIONS[qi];
+      const buttons = Array.from(choicesEl.querySelectorAll('button.choice'));
+      // lock buttons
+      buttons.forEach(b=>b.disabled=true);
+      if (idx === Q.answer) {
+        // correct
+        buttons[idx].classList.add('correct');
+        explainEl.hidden = false;
+        explainEl.textContent = '✅ Correct! ' + Q.explain;
+        state.score += 10 + Math.min(20, state.correctStreak*2);
+        state.correctStreak += 1;
+        state.answered[qi] = true;
+      } else {
+        buttons[idx].classList.add('wrong');
+        buttons[Q.answer].classList.add('correct');
+        explainEl.hidden = false;
+        explainEl.textContent = '❌ Not quite. ' + Q.explain;
+        state.lives -= 1;
+        state.correctStreak = 0;
+        state.answered[qi] = false;
+      }
+      scoreEl.textContent = state.score;
+      streakEl.textContent = state.correctStreak;
+      livesEl.textContent = '❤️'.repeat(state.lives) + '🤍'.repeat(3-state.lives);
+      nextBtn.textContent = (state.current === TOTAL-1) ? 'Finish' : 'Next ▶';
+
+      // if last question, advance on next click
+      nextBtn.onclick = ()=>{
+        state.current += 1;
+        saveToLocal();
+        renderQuestion(); updateSidebar();
+      };
+
+      // check for game over
+      if (state.lives <= 0) {
+        showGameOver();
+      }
+    }
+
+    hintBtn.addEventListener('click', ()=>{
+      if (state.hintsLeft <= 0) return alert('No hints left!');
+      const qi = state.order[state.current];
+      const Q = QUESTIONS[qi];
+      alert('Hint: ' + Q.hint);
+      state.hintsLeft -= 1; hintsLeftEl.textContent = state.hintsLeft;
+      saveToLocal();
+    });
+
+    skipBtn.addEventListener('click', ()=>{
+      state.current += 1; saveToLocal(); renderQuestion(); updateSidebar();
+    });
+
+    restartBtn.addEventListener('click', ()=>{
+      if (!confirm('Restart the quiz? Your current progress will be reset.')) return;
+      localStorage.removeItem('cybersafe_state_v1');
+      state = {order:[],current:0,score:0,correctStreak:0,lives:3,hintsLeft:3,answered:{}};
+      init();
+    });
+
+    saveBtn.addEventListener('click', ()=>{ saveToLocal(); alert('Progress saved locally.'); });
+
+    function updateSidebar() {
+      progressText.textContent = `${state.current} / ${TOTAL}`;
+      progressBar.style.width = `${(state.current / TOTAL)*100}%`;
+      scoreEl.textContent = state.score;
+      livesEl.textContent = '❤️'.repeat(state.lives) + '🤍'.repeat(3-state.lives);
+      streakEl.textContent = state.correctStreak;
+      hintsLeftEl.textContent = state.hintsLeft;
+      summaryEl.textContent = `Answered: ${Object.keys(state.answered).length}`;
+    }
+
+    function showGameOver() {
+      // lock UI
+      choicesEl.innerHTML = '';
+      questionEl.textContent = 'Game Over — you ran out of lives!';
+      explainEl.hidden = false; explainEl.textContent = 'Tip: Use hints and take your time. You can restart to try again.';
+      nextBtn.textContent = 'Restart';
+      nextBtn.onclick = ()=>{ restartBtn.click(); };
+      playConfetti(false);
+    }
+
+    function showSummary() {
+      choicesEl.innerHTML = '';
+      questionEl.textContent = 'Quiz Complete — Well done!';
+      explainEl.hidden = false; explainEl.textContent = `You scored ${state.score} points. You answered ${Object.keys(state.answered).length} questions. Keep practicing to improve!`;
+      nextBtn.textContent = 'Play Again';
+      nextBtn.onclick = ()=>{ restartBtn.click(); };
+      progressBar.style.width = '100%';
+      playConfetti(true);
+    }
+
+    function saveToLocal() {
+      try { localStorage.setItem('cybersafe_state_v1', JSON.stringify(state)); }
+      catch(e){ console.warn('save failed', e); }
+    }
+
+    // keyboard support: 1-4 to answer, N for next, H for hint
+    window.addEventListener('keydown', (e)=>{
+      if (e.key >= '1' && e.key <= '4') {
+        const idx = parseInt(e.key,10)-1;
+        const btn = choicesEl.querySelector(`button[data-index=\"${idx}\"]`);
+        if (btn && !btn.disabled) btn.click();
+      } else if (e.key.toLowerCase() === 'h') hintBtn.click();
+      else if (e.key.toLowerCase() === 'n') nextBtn.click();
+    });
+
+    // Simple confetti (no external libs)
+    function playConfetti(win=true){
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = innerWidth; canvas.height = innerHeight; let pieces=[];
+      for (let i=0;i<120;i++) pieces.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height-200,vy:2+Math.random()*4,ax:Math.random()*0.05-0.025,rot:Math.random()*360, size:4+Math.random()*8, color:`hsl(${Math.random()*360},80%,60%)`});
+      let t=0; function frame(){ ctx.clearRect(0,0,canvas.width,canvas.height); pieces.forEach(p=>{p.x+=p.ax*5; p.y+=p.vy; p.rot+=2; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180); ctx.fillStyle=p.color; ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size); ctx.restore();}); t++; if (t<180) requestAnimationFrame(frame); else ctx.clearRect(0,0,canvas.width,canvas.height);
+      }
+      if (win) frame(); else { /* subtle sad wiggle */ pieces.length=40; frame(); }
+    }
+
+    // Start button behaviour
+    nextBtn.addEventListener('click', ()=>{
+      if (state.current === 0 && Object.keys(state.answered).length===0 && state.score===0) {
+        // begin
+        renderQuestion();
+      }
+    });
+
+    // initialize
+    init();
+
+  </script>
+</body>
+</html>
