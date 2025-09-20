@@ -21,7 +21,8 @@ A playful web-based quiz to learn cybersecurity basics interactively.
 ## 🚀 Run Locally
 1. Clone the repository:
    ```bash
-   git clone https://github.com/<atharvashirude7>/cybersecurity-quiz.git
+git clone https://github.com/atharvashirude7/cybersecurity-quiz.git
+
 🤝 Contributing
 
 Contributions are welcome!
