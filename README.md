@@ -16,16 +16,18 @@ Motivational messages
 
 Simple, browser-based
 
+
 🛠️ Run Locally
 git clone https://github.com/<username>/<repo>.git
 cd <repo>
 
-
 Open index.html in a browser.
+
 
 🤝 Contributing
 
 Fork → Branch → Commit → PR
+
 
 📄 License
 
