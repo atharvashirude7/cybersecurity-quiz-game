@@ -8,4 +8,25 @@ https://github.com/atharvashirude7/cybersecurity-quiz-game/blob/main/Screenshot%
 )
 
 
+✨ Features
 
+Real-time feedback & stats (WPM, accuracy, time)
+
+Motivational messages
+
+Simple, browser-based
+
+🛠️ Run Locally
+git clone https://github.com/<username>/<repo>.git
+cd <repo>
+
+
+Open index.html in a browser.
+
+🤝 Contributing
+
+Fork → Branch → Commit → PR
+
+📄 License
+
+MIT License
