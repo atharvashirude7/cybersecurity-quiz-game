@@ -8,25 +8,30 @@ https://github.com/atharvashirude7/cybersecurity-quiz-game/blob/main/Screenshot%
 )
 
 
-✨ Features
+# Cybersecurity Quiz Game  
 
-Real-time feedback & stats (WPM, accuracy, time)
+A playful web-based quiz to learn cybersecurity basics interactively.  
 
-Motivational messages
+## ✨ Features
+- Multiple-choice questions on phishing, passwords, 2FA, and more  
+- Instant feedback with explanations and hints  
+- Score, streak, and lives system  
+- Works fully offline in your browser  
 
-Simple, browser-based
-
-🛠️ Run Locally
-git clone https://github.com/<username>/<repo>.git
-cd <repo>
-
-
-Open index.html in a browser.
-
+## 🚀 Run Locally
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/<atharvashirude7>/cybersecurity-quiz.git
 🤝 Contributing
 
-Fork → Branch → Commit → PR
+Contributions are welcome!
 
-📄 License
+*Fork the repo
+*Create a new branch
+*Commit your changes
+*Open a Pull Request
 
-MIT License
+📜 License
+
+This project is licensed under the MIT License
+.
